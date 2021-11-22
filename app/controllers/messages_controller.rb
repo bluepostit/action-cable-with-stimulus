@@ -6,7 +6,12 @@ class MessagesController < ApplicationController
     @chatroom = Chatroom.find(params[:chatroom_id])
     @message.chatroom = @chatroom
     if @message.save
-      redirect_to chatroom_path(@chatroom)
+      # Broadcast message to all subscribers
+      ChatroomChannel.broadcast_to(
+        @chatroom,
+        render_to_string(partial: 'message', locals: { message: @message })
+      )
+      redirect_to chatroom_path(@chatroom, anchor: "message-#{@message.id}")
     else
       render 'chatrooms/show'
     end
